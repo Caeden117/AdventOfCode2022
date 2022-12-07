@@ -1,22 +1,24 @@
 ﻿const int messageLength = 14; // Change to 4 for part 1, 14 for part 2
 using var input = File.OpenRead("input.txt");
 var totalChars = 0;
-var currentByte = 0;
-var processingPackets = new List<HashSet<char>>(messageLength);
+var currentChar = 0;
+var bitfield = 0u;
+var i = 0;
+Span<int> processing = stackalloc int[(int)input.Length];
 
-while ((currentByte = input.ReadByte()) > -1)
+while ((currentChar = input.ReadByte()) > -1)
 {
-    var currentChar = (char)currentByte;
-    if (!char.IsAscii(currentChar)) continue;
+    if (currentChar > 'z') continue;
+    processing[totalChars] = currentChar;
     totalChars++;
-    for (var i = processingPackets.Count - 1; i >= 0; i--)
+    if (totalChars >= messageLength)
     {
-        if (!processingPackets[i].Add(currentChar))
-            processingPackets.RemoveAt(i);
-        else if (processingPackets[i].Count == messageLength)
-            goto complete; // xkcd 292
+        bitfield = 0;
+        
+        for (i = totalChars - messageLength; i < totalChars; i++) bitfield |= 1u << (processing[i] - 'a');
+
+        if (System.Numerics.BitOperations.PopCount(bitfield) == messageLength) break;
     }
-    processingPackets.Add(new(messageLength) { currentChar });
 }
 
-complete: Console.WriteLine($"Start of packet detected after {totalChars} characters.");
+Console.WriteLine($"Start of packet detected after {totalChars} characters.");
